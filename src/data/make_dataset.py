@@ -3,6 +3,7 @@ import os
 import zipfile
 from datetime import datetime, timedelta
 
+import pandas as pd
 import requests
 
 
@@ -42,3 +43,32 @@ class Data:
             zip_ref.extract(f"{file_name[:-4]}.csv", folder)
         os.remove(f"{folder}/{file_name}")
         return file_name
+
+    @staticmethod
+    def raw2csv(folder: str):
+        files = os.listdir(folder)
+        columns = [
+            "Id",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close time",
+            "Quote asset volume",
+            "Number of trades",
+            "Taker buy base asset volume",
+            "Taker buy quote asset volume",
+            "Ignore",
+        ]
+        main_df = pd.concat(
+            [pd.read_csv(f"{folder}/{f}", names=columns) for f in files],
+            ignore_index=True,
+        )
+        main_df.columns = columns
+        new_folder = folder.replace("raw", "processed")
+        os.makedirs(new_folder, exist_ok=True)
+        main_df.to_csv(f"{new_folder}/data.csv")
+
+
+Data.raw2csv("data/raw/BTCUSDC/5m")
